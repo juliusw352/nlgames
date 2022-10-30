@@ -7,7 +7,13 @@ class xorgame:
 		self.predMatrix = predMatrix
 
 		#Catching errors
-		if (probMatrix.shape != predMatrix.shape):
+		if (self.probMatrix.shape != self.predMatrix.shape):
 			raise TypeError("Probability and predicate matrix must have the same dimensions.")
-		if (np.sum(probMatrix) != 1):
+		if (np.sum(self.probMatrix) != 1):
 			raise ValueError("The probabilities must sum up to one.")
+
+	def cvalue(self):
+		val = 0
+
+
+		return val
