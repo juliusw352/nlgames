@@ -33,11 +33,11 @@ class xorgame:
 				# so we can create a matrix that represents all the info we need.
 				a_matrix = np.multiply(a_strategy.T.reshape(-1,1), np.ones((1,q_1)))
 				b_matrix = np.multiply(b_strategy.T.reshape(-1,1), np.ones((1, q_0)))
-				b_matrix = b_matrix.T
+				b_matrix = b_matrix.T # Transpose so that one "direction" is s, and the other is t
 				combined_matrix = np.mod(a_matrix + b_matrix, 2)
 
+				# Factor in the probabilities of each combination occuring, and sum up all the results
 				final_matrix = np.multiply(combined_matrix == self.predMatrix, self.probMatrix)
-
 				val = np.sum(final_matrix)
 
 				if val == 1: return val # check for perfect strategy
