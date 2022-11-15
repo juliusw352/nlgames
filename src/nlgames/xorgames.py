@@ -43,9 +43,3 @@ class xorgame:
 				if val == 1: return val # check for perfect strategy
 				maxval = val if val > maxval else maxval # check if current strategy is better than others encountered
 		return maxval
-
-pred = np.array([[0,0],[0,1]])
-prob = np.array([[0.25,0.25],[0.25,0.25]])
-
-chsh = xorgame(pred, prob)
-print(chsh.cvalue())
