@@ -43,3 +43,9 @@ class xorgame:
 				if val == 1: return val # check for perfect strategy
 				maxval = val if val > maxval else maxval # check if current strategy is better than others encountered
 		return maxval
+	
+	def qvalue(self):
+		maxvalue = 0
+		q_0, q_1 = self.probMatrix.shape
+
+		return maxvalue
