@@ -49,3 +49,10 @@ class xorgame:
 		q_0, q_1 = self.probMatrix.shape
 
 		return maxvalue
+
+
+prob = np.array([[0.25, 0.25],[0.25, 0.25]])
+pred = np.array([[0, 0],[0, 1]])
+chsh = xorgame(pred, prob)
+
+print(chsh.cvalue())
