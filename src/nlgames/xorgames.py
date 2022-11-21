@@ -4,7 +4,7 @@ import cvxpy
 class xorgame:
 	def __init__(self, predMatrix: np.ndarray, probMatrix: np.ndarray):
 		self.probMatrix = probMatrix
-		self.predMatrix = predMatrix
+		self.predMatrix = predMatrix # This matrix defines f(x,y) as mentioned in the Watrous lecture notes
 
 		#Catching errors
 		if (self.probMatrix.shape != self.predMatrix.shape):
@@ -12,8 +12,6 @@ class xorgame:
 		if (np.sum(self.probMatrix) != 1):
 			raise ValueError("The probabilities must sum up to one.")
 
-
-	# TODO: Figure out expansion beyond simple binary games
 	def cvalue(self):
 		maxval = 0
 
@@ -45,10 +43,45 @@ class xorgame:
 		return maxval
 	
 	def qvalue(self):
-		maxvalue = 0
+		value = 0
 		q_0, q_1 = self.probMatrix.shape
 
-		return maxvalue
+		# Variables below correspond to the equivalently-named ones in the Watrous lecture notes.
+		# https://cs.uwaterloo.ca/~watrous/QIT-notes/QIT-notes.06.pdf
+		# https://cs.uwaterloo.ca/~watrous/QIT-notes/QIT-notes.07.pdf
+		f = self.predMatrix 
+		pi = self.probMatrix 
+		d = np.ndarray((q_0,q_1))
+		for i in range(q_0):
+			for j in range(q_1):
+				d[i,j] = pi[i,j] * ((-1)**f[i,j])
+
+
+		u = cvxpy.Variable(q_0, complex=False) # Complex = false is equivalent to the 2nd & 3rd restrictions (?)
+		v = cvxpy.Variable(q_1, complex=False)
+
+		# To be minimised:
+		# (toqito omits the 1/2 part, not sure why)
+		objective = cvxpy.Minimize((1/2 * cvxpy.sum(u)) + (1/2 * cvxpy.sum(v)))
+
+		constraints = [
+			cvxpy.bmat(
+				[[cvxpy.diag(u), -d], 
+				[-(d.conj().T), cvxpy.diag(v)]]
+			)
+			>> 0 # This line states that the matrix is positive semidefinite.
+		]
+
+		sdp = cvxpy.Problem(objective, constraints)
+		sdp.solve()
+
+		bias = np.real(sdp.value)
+
+
+		# toqito divides the bias by 4 for some reason
+		value = 1/2 + bias/2
+
+		return value
 
 
 prob = np.array([[0.25, 0.25],[0.25, 0.25]])
@@ -56,3 +89,4 @@ pred = np.array([[0, 0],[0, 1]])
 chsh = xorgame(pred, prob)
 
 print(chsh.cvalue())
+print(chsh.qvalue()) 
