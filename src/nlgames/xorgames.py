@@ -78,7 +78,7 @@ class xorgame:
 		bias = np.real(sdp.value)
 
 
-		# toqito divides the bias by 4 for some reason
+		# toqito divides the bias by 4 for some reason. This is how it's done in the Watrous lecture notes.
 		value = 1/2 + bias/2
 
 		return value
