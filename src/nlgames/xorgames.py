@@ -42,7 +42,7 @@ class xorgame:
 				maxval = val if val > maxval else maxval # check if current strategy is better than others encountered
 		return maxval
 	
-	def qvalue(self):
+	def qbias(self):
 		value = 0
 		q_0, q_1 = self.probMatrix.shape
 
@@ -76,9 +76,14 @@ class xorgame:
 		sdp.solve()
 
 		bias = np.real(sdp.value)
+		return bias
 
+	def cbias(self):
+		return 2 * self.cvalue() - 1
 
+	def qvalue(self):
 		# toqito divides the bias by 4 for some reason. This is how it's done in the Watrous lecture notes.
+		bias = self.qbias()
 		value = 1/2 + bias/2
 
 		return value
@@ -88,5 +93,9 @@ prob = np.array([[0.25, 0.25],[0.25, 0.25]])
 pred = np.array([[0, 0],[0, 1]])
 chsh = xorgame(pred, prob)
 
-print(chsh.cvalue())
-print(chsh.qvalue()) 
+print("\n\n############### NONLOCAL GAME ANALYSIS DEMO ###############\n")
+print("Example: CHSH game\n")
+print("Classical value: " + str(chsh.cvalue()))
+print("Classical bias: " + str(chsh.cbias()))
+print("Quantum value: " + str(chsh.qvalue()))
+print("Quantum bias: " + str(chsh.qbias()))
