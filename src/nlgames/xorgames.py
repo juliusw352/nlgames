@@ -2,9 +2,10 @@ import numpy as np
 import cvxpy
 
 class xorgame:
-	def __init__(self, predMatrix: np.ndarray, probMatrix: np.ndarray):
+	def __init__(self, predMatrix: np.ndarray, probMatrix: np.ndarray, reps: int):
 		self.probMatrix = probMatrix
 		self.predMatrix = predMatrix
+		self.reps = reps
 
 		#Catching errors
 		if (self.probMatrix.shape != self.predMatrix.shape):
@@ -14,13 +15,13 @@ class xorgame:
 
 
 	# TODO: Figure out expansion beyond simple binary games
-	def cvalue(self, reps):
+	def cvalue(self):
 		maxval = 0
 
 		q_0, q_1 = self.probMatrix.shape
 
 		# Iterate through all strategies & combinations
-		for combination in range(2**reps):
+		for combination in range(2**self.reps):
 			for a_ans in range(2**q_0):
 				for b_ans in range(2**q_1):
 					val = 0
@@ -54,6 +55,6 @@ class xorgame:
 
 prob = np.array([[0.25, 0.25],[0.25, 0.25]])
 pred = np.array([[0, 0],[0, 1]])
-chsh = xorgame(pred, prob)
+chsh = xorgame(pred, prob, 1)
 
 print(chsh.cvalue())
