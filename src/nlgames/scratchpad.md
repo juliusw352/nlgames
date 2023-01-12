@@ -12,3 +12,9 @@ Generate long vector, reshape??
 
 :ij
 logical_and
+
+
+## The above doesn't seem to work very well. Instead:
+
+One long strategy vector.
+Basically _n_ strategy vectors attached to one another.
