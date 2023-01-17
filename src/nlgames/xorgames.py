@@ -16,46 +16,76 @@ class xorgame:
 
 	def cvalue(self):
 		maxval = 0
-
-		q_0, q_1 = self.probMatrix.shape
 		reps = self.reps
-		q_0_repeats, q_1_repeats = q_0 * reps, q_1 * reps
+		augmented_prob = self.probMatrix
+		for i in range(reps - 1):
+			augmented_prob = np.kron(augmented_prob, self.probMatrix)
+
+		q_0_original, q_1_original = self.probMatrix.shape
+		q_0, q_1 = augmented_prob.shape
+
+		augmented_pred = np.ndarray((reps, q_0, q_1))
+
+		for i in range(reps):
+			l = 2**i
+			pattern1 = np.concatenate((np.tile([0, 0], (l, 1)), np.tile([0, 1], (l, 1))), axis=0).T
+			pattern2 = np.concatenate((np.tile([1, 0], (l, 1)), np.tile([1, 1], (l, 1))), axis=0).T
+			row1 = np.tile(pattern1, int(q_0/(2*l)))
+			row2 = np.tile(pattern2, int(q_0/(2*l)))
+			mask = np.tile(np.concatenate((np.tile(row1, (l, 1)), np.tile(row2, (l, 1))), axis=0), (int(q_0/(2*l)), 1)).reshape(2, q_0, q_0)
+
+			for j in range(q_0):
+				for k in range(q_1):
+					augmented_pred[i, j, k] = self.predMatrix[mask[0, j, k], mask[1, j, k]]
+
+		#print(augmented_pred)
+
+
+		#print(augmented_prob)
+		#print(augmented_pred)
+
 
 		# Iterate through all strategies
-		for a_ans in range(2**q_0_repeats):
-			for b_ans in range(2**q_1_repeats):
+		for a_ans in range(2**q_0):
+			for b_ans in range(2**q_1):
 				val = 0
 
 				# Generate full strategy vectors. Index represents the question, value represents the answer.
 				# This is done slightly differently from the toqito version, because I find this one more legible.
-				# Strategy vectors are converted into 2d matrices, with each row representing a separate repetition
-				a_strategy = np.array([1 if a_ans & (1 << (q_0_repeats - 1 - n)) else 0 for n in range (q_0_repeats)]).reshape((reps, q_0))
-				b_strategy = np.array([1 if b_ans & (1 << (q_1_repeats - 1 - n)) else 0 for n in range (q_1_repeats)]).reshape((reps, q_1))
-				# Initialising a bunch of matrices that will be populated in the for loop
+				a_strategy = np.array([1 if a_ans & (1 << ((q_0_original * reps) - 1 - n)) else 0 for n in range (q_0_original * reps)]).reshape(reps, q_0_original)
+				b_strategy = np.array([1 if b_ans & (1 << ((q_1_original * reps) - 1 - n)) else 0 for n in range (q_1_original * reps)]).reshape(reps, q_1_original)
+
+				#print(b_strategy)
+				a_full_strategy = np.ndarray((reps, q_0))
+				b_full_strategy = np.ndarray((reps, q_1))
+
+				for i in range(reps):
+					l = 2**i
+					pattern = np.append(np.repeat(0, l), np.repeat(1, l))
+					mask = np.tile(pattern, int(q_0 / (2*l)))
+					for j in range(q_0):
+						a_full_strategy[i, j] = a_strategy[i, mask[j]]
+						b_full_strategy[i, j] = b_strategy[i, mask[j]]
+				# XOR games don't really need both strategies separately, but only the XOR of both,
+				# so we can create a matrix that represents all the info we need.
 				a_matrix = np.ndarray((reps, q_0, q_0))
 				b_matrix = np.ndarray((reps, q_1, q_1))
 				combined_matrix = np.ndarray((reps, q_0, q_0))
-				result_matrix = np.ndarray((reps, q_0, q_0))
-				
-				for repetition in range(reps):
-					a_matrix[repetition] = np.multiply(a_strategy[repetition].T.reshape(-1,1), np.ones((1,q_0)))
-					b_matrix[repetition] = np.multiply(b_strategy[repetition].T.reshape(-1,1), np.ones((1, q_1)))
-					#b_matrix[repetition] = b_matrix[repetition].T # Transpose so that one "direction" is s, and the other is t
-					# XOR games don't really need both strategies separately, but only the XOR of both,
-					# so we can create a matrix that represents all the info we need. 
-					combined_matrix[repetition] = np.mod(a_matrix[repetition] + b_matrix[repetition].T, 2)
-					result_matrix[repetition] = combined_matrix[repetition] == self.predMatrix
-
-				condensed_matrix = np.ndarray((q_0, q_0))
-				for i in range(condensed_matrix.shape[0]):
-					for j in range(condensed_matrix.shape[1]):
-						condensed_matrix[i,j] = np.logical_and.reduce(result_matrix[:,i,j])
-				print(condensed_matrix)
+				for i in range(reps):
+					
+					a_matrix[i] = np.multiply(a_full_strategy[i].T.reshape(-1,1), np.ones((1,q_0)))
+					b_matrix[i] = np.multiply(b_full_strategy[i].T.reshape(-1,1), np.ones((1, q_1))).T
+					#b_matrix = b_matrix.T # Transpose so that one "direction" is s, and the other is t
+					combined_matrix[i] = np.mod(a_matrix[i] + b_matrix[i], 2)
+				success_matrix = combined_matrix == augmented_pred
+				#print(combined_matrix)
+				#print(success_matrix)
+				reduced_matrix = np.multiply.reduce(success_matrix, 0)
 
 				# Factor in the probabilities of each combination occuring, and sum up all the results
-				val = np.sum(np.multiply(condensed_matrix, self.probMatrix))
-				
-				
+				final_matrix = np.multiply(reduced_matrix, augmented_prob)
+				val = np.sum(final_matrix)
+
 
 				if val == 1: return val # check for perfect strategy
 				maxval = val if val > maxval else maxval # check if current strategy is better than others encountered
@@ -70,23 +100,7 @@ class xorgame:
 
 prob = np.array([[0.25, 0.25],[0.25, 0.25]])
 pred = np.array([[0, 0],[0, 1]])
-chsh = xorgame(pred, prob, 2)
+chsh = xorgame(pred, prob, 1)
 
 print(chsh.cvalue())
 
-"""q_0 = 2
-reps = 2
-length = q_0 * reps
-for a_ans in range(length**2):
-
-	a_strategy = np.array([1 if a_ans & (1 << (length - 1 - n)) else 0 for n in range (length)]).reshape((q_0, reps))
-	a_matrix = np.zeros((reps, q_0, q_0))
-	for repetition in range(reps):
-		a_matrix[repetition] = np.multiply(a_strategy[repetition].T.reshape(-1,1), np.ones((1,q_0)))
-
-	print("Matrix: ")
-	print(a_matrix)
-	print("condensed:")
-	for i in range(q_0):
-		for j in range(q_0):
-			print(np.multiply.reduce(a_matrix[:,i,j]))"""

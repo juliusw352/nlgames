@@ -18,3 +18,7 @@ logical_and
 
 One long strategy vector.
 Basically _n_ strategy vectors attached to one another.
+
+
+## TODO
+Predicate matrix needs more dimensions??
