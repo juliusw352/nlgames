@@ -18,31 +18,20 @@ class xorgame:
 		maxval = 0
 		reps = self.reps
 		augmented_prob = self.probMatrix
+
 		for i in range(reps - 1):
 			augmented_prob = np.kron(augmented_prob, self.probMatrix)
 
 		q_0_original, q_1_original = self.probMatrix.shape
 		q_0, q_1 = augmented_prob.shape
-
 		augmented_pred = np.ndarray((reps, q_0, q_1))
 
 		for i in range(reps):
-			l = 2**i
-			pattern1 = np.concatenate((np.tile([0, 0], (l, 1)), np.tile([0, 1], (l, 1))), axis=0).T
-			pattern2 = np.concatenate((np.tile([1, 0], (l, 1)), np.tile([1, 1], (l, 1))), axis=0).T
-			row1 = np.tile(pattern1, int(q_0/(2*l)))
-			row2 = np.tile(pattern2, int(q_0/(2*l)))
-			mask = np.tile(np.concatenate((np.tile(row1, (l, 1)), np.tile(row2, (l, 1))), axis=0), (int(q_0/(2*l)), 1)).reshape(2, q_0, q_0)
-
+			mask = np.ndarray((q_0, q_1))
+			mask2 = np.ndarray((q_0, q_1))
 			for j in range(q_0):
 				for k in range(q_1):
-					augmented_pred[i, j, k] = self.predMatrix[mask[0, j, k], mask[1, j, k]]
-
-		#print(augmented_pred)
-
-
-		#print(augmented_prob)
-		#print(augmented_pred)
+					augmented_pred[i, j, k] = self.predMatrix[(j >> i) % 2, (k >> i) % 2]
 
 
 		# Iterate through all strategies
@@ -55,7 +44,6 @@ class xorgame:
 				a_strategy = np.array([1 if a_ans & (1 << ((q_0_original * reps) - 1 - n)) else 0 for n in range (q_0_original * reps)]).reshape(reps, q_0_original)
 				b_strategy = np.array([1 if b_ans & (1 << ((q_1_original * reps) - 1 - n)) else 0 for n in range (q_1_original * reps)]).reshape(reps, q_1_original)
 
-				#print(b_strategy)
 				a_full_strategy = np.ndarray((reps, q_0))
 				b_full_strategy = np.ndarray((reps, q_1))
 
@@ -75,11 +63,9 @@ class xorgame:
 					
 					a_matrix[i] = np.multiply(a_full_strategy[i].T.reshape(-1,1), np.ones((1,q_0)))
 					b_matrix[i] = np.multiply(b_full_strategy[i].T.reshape(-1,1), np.ones((1, q_1))).T
-					#b_matrix = b_matrix.T # Transpose so that one "direction" is s, and the other is t
+					
 					combined_matrix[i] = np.mod(a_matrix[i] + b_matrix[i], 2)
 				success_matrix = combined_matrix == augmented_pred
-				#print(combined_matrix)
-				#print(success_matrix)
 				reduced_matrix = np.multiply.reduce(success_matrix, 0)
 
 				# Factor in the probabilities of each combination occuring, and sum up all the results
@@ -88,7 +74,8 @@ class xorgame:
 
 
 				if val == 1: return val # check for perfect strategy
-				maxval = val if val > maxval else maxval # check if current strategy is better than others encountered
+				if val > maxval:
+					maxval = val
 		return maxval
 	
 	def qvalue(self):
@@ -100,7 +87,6 @@ class xorgame:
 
 prob = np.array([[0.25, 0.25],[0.25, 0.25]])
 pred = np.array([[0, 0],[0, 1]])
-chsh = xorgame(pred, prob, 1)
+chsh = xorgame(pred, prob, 3)
 
 print(chsh.cvalue())
-
