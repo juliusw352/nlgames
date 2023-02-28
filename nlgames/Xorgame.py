@@ -1,11 +1,10 @@
 import numpy as np
 import cvxpy
 
-class xorgame:
-	def __init__(self, predMatrix: np.ndarray, probMatrix: np.ndarray, reps: int):
+class Xorgame:
+	def __init__(self, predMatrix: np.ndarray, probMatrix: np.ndarray):
 		self.probMatrix = probMatrix
 		self.predMatrix = predMatrix
-		self.reps = reps
 
 
 		#Catching errors
@@ -15,11 +14,11 @@ class xorgame:
 			raise ValueError("The probabilities must sum up to one.")
 
 
-	def cvalue(self):
-		maxval = 0
-		reps = self.reps
+	def cvalue(self, reps: int) -> float:
+		maxval = 0.0
 		augmented_prob = self.probMatrix
 
+		# Create larger probability matrix in case of repetition
 		for i in range(reps - 1):
 			augmented_prob = np.kron(augmented_prob, self.probMatrix)
 
@@ -27,9 +26,8 @@ class xorgame:
 		q_0, q_1 = augmented_prob.shape
 		augmented_pred = np.ndarray((reps, q_0, q_1))
 
+		# Create multi-layer predicate matrix in case of parallel repetition
 		for i in range(reps):
-			mask = np.ndarray((q_0, q_1))
-			mask2 = np.ndarray((q_0, q_1))
 			for j in range(q_0):
 				for k in range(q_1):
 					augmented_pred[i, j, k] = self.predMatrix[(j >> i) % 2, (k >> i) % 2]
@@ -55,11 +53,12 @@ class xorgame:
 					for j in range(q_0):
 						a_full_strategy[i, j] = a_strategy[i, mask[j]]
 						b_full_strategy[i, j] = b_strategy[i, mask[j]]
+
 				# XOR games don't really need both strategies separately, but only the XOR of both,
 				# so we can create a matrix that represents all the info we need.
 				a_matrix = np.ndarray((reps, q_0, q_0))
 				b_matrix = np.ndarray((reps, q_1, q_1))
-				combined_matrix = np.ndarray((reps, q_0, q_0))
+				combined_matrix = np.ndarray((reps, q_0, q_1))
 				for i in range(reps):
 					
 					a_matrix[i] = np.multiply(a_full_strategy[i].T.reshape(-1,1), np.ones((1,q_0)))
@@ -79,8 +78,8 @@ class xorgame:
 					maxval = val
 		return maxval
 	
-	def qbias(self):
-		value = 0
+	def __singlebias(self) -> float:
+		value = 0.0
 		q_0, q_1 = self.probMatrix.shape
 
 		# Variables below correspond to the equivalently-named ones in the Watrous lecture notes.
@@ -115,26 +114,46 @@ class xorgame:
 		bias = np.real(sdp.value)
 		return bias
 
-	def cbias(self):
-		return 2 * self.cvalue() - 1
+	def cbias(self, reps: int) -> float:
+		return 2 * self.cvalue(reps) - 1
 
-	def qvalue(self):
+	def qvalue(self, reps: int) -> float:
 		# toqito divides the bias by 4 for some reason. This is how it's done in the Watrous lecture notes.
-		bias = self.qbias()
+		bias = self.__singlebias()
 		value = 1/2 + bias/2
+		return value**reps
+	
+	def qbias(self, reps: int) -> float:
+		value = self.qvalue(reps)
+		return value - (1-value)
+	
+	def to_nonlocal_game(self) -> np.ndarray:
+		
+		q_0, q_1 = self.probMatrix.shape
+		pred_mat = self.predMatrix
+		result = np.ndarray((2,2,q_0,q_1))
 
-		return value
+		for a in range(2):
+			for b in range(2):
+				for x in range(q_0):
+					for y in range(q_1):
+						result[a,b,x,y] = pred_mat[x,y] == a ^ b
+
+		return result
 
 
-# Demonstration type beat
+
+""" # Demonstration type beat
 prob = np.array([[0.25, 0.25],[0.25, 0.25]])
 pred = np.array([[0, 0],[0, 1]])
-chsh = xorgame(pred, prob, 3)
+chsh = xorgame(pred, prob)
 
 
 print("\n\n############### NONLOCAL GAME ANALYSIS DEMO ###############\n")
 print("Example: CHSH game\n")
-print("Classical value: " + str(chsh.cvalue()))
-print("Classical bias: " + str(chsh.cbias()))
-print("Quantum value: " + str(chsh.qvalue()))
-print("Quantum bias: " + str(chsh.qbias()))
+print("Classical value: " + str(chsh.cvalue(2)))
+print("Classical bias: " + str(chsh.cbias(2)))
+print("Quantum value: " + str(chsh.qvalue(2)))
+print("Quantum bias: " + str(chsh.qbias(2)))
+
+print(chsh.to_nonlocal_game()) """
