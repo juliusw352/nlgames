@@ -19,7 +19,8 @@ classifiers = [
 dependencies = [
     "numpy",
     "cvxpy",
-    "pytest"
+    "pytest",
+    "ortools<=9.4.1874"
 ]
 
 [project.urls]

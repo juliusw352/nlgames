@@ -16,7 +16,7 @@ def test_cvalue_repetition():
 
     game = Xorgame(pred, prob)
 
-    np.testing.assert_equal(game.cvalue(2), 0.75**2)
+    np.testing.assert_equal(game.cvalue(2), 0.625)
 
 def test_qvalue():
     prob = np.array([[0.25,0.25],[0.25,0.25]])
