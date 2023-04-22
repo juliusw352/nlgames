@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling", "numpy", "cvxpy", "pytest"]
+requires = ["hatchling", "numpy", "cvxpy", "pytest", "ortools<=9.4.1874"]
 build-backend = "hatchling.build"
 
 [project]
 name = "nlgames"
-version = "0.0.1"
+version = "0.0.2"
 authors = [
     { name="Julius Weisser", email="julius.weisser@warwick.ac.uk" },
 ]

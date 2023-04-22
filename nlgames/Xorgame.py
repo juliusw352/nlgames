@@ -12,6 +12,8 @@ class Xorgame:
 			raise TypeError("Probability and predicate matrix must have the same dimensions.")
 		if (np.sum(self.probMatrix) != 1):
 			raise ValueError("The probabilities must sum up to one.")
+		if (np.any(probMatrix<0)):
+			raise ValueError("The probability matrix cannot contain negative values.")
 
 
 	def cvalue(self, reps: int) -> float:
@@ -42,6 +44,9 @@ class Xorgame:
 
 				# Generate full strategy vectors. Index represents the question, value represents the answer.
 				# This is done slightly differently from the toqito version, because I find this one more legible.
+				# 
+				# Each row represents one answer to a set of questions, with the column index representing the question in binary,
+				# e.g. a_stategy[0,0] is the answer to the first question if all questions are 0.
 				a_strategy = np.array([1 if a_ans & (1 << ((q_0 * reps) - 1 - n)) else 0 for n in range (q_0 * reps)]).reshape(reps, q_0)
 				b_strategy = np.array([1 if b_ans & (1 << ((q_1 * reps) - 1 - n)) else 0 for n in range (q_1 * reps)]).reshape(reps, q_1)
 
