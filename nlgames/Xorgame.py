@@ -43,7 +43,7 @@ class Xorgame:
 				val = 0
 
 				# Generate full strategy vectors. Index represents the question, value represents the answer.
-				# This is done slightly differently from the toqito version, because I find this one more legible.
+				# This is done slightly differently from the toqito version, because I find this one more legible and easier to understand.
 				# 
 				# Each row represents one answer to a set of questions, with the column index representing the question in binary,
 				# e.g. a_stategy[0,0] is the answer to the first question if all questions are 0.
@@ -132,9 +132,9 @@ class Xorgame:
 
 		for a in range(2):
 			for b in range(2):
-				for x in range(q_0):
-					for y in range(q_1):
-						result[a,b,x,y] = pred_mat[x,y] == a ^ b
+				for s in range(q_0):
+					for t in range(q_1):
+						result[a,b,s,t] = pred_mat[s,t] == a ^ b
 
 		return result
 
