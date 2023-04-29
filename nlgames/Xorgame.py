@@ -1,5 +1,8 @@
 import numpy as np
 import cvxpy
+from collections import defaultdict
+from ortools.init import pywrapinit
+from ortools.linear_solver import pywraplp
 
 class Xorgame:
 	def __init__(self, predMatrix: np.ndarray, probMatrix: np.ndarray):
@@ -124,6 +127,64 @@ class Xorgame:
 		value = self.qvalue(reps)
 		return value - (1-value)
 	
+	def nsval_single(self) -> float:
+
+		# Some of this function is hardcoded for 2x2 matrices.
+		if self.probMatrix.shape[0] > 2:
+			raise ValueError("This function only supports matrices of the size 2x2.")
+
+		# Initialise solver
+		solver = pywraplp.Solver.CreateSolver('GLOP')
+
+		# Initialise probabilities p(a,b|x,y)
+		prob_space = defaultdict(pywraplp.Variable)
+		for a in range(2):
+			for b in range(2):
+				for s in range(2):
+					for t in range(2):
+						prob_space[a, b, s, t] = solver.NumVar(0.0, 1.0, 'prob_space[%i,%i,%i,%i]' % (a,b,s,t))
+
+
+
+		# Conditions over \sum_b
+		# Because this only works for 2x2 matrices, it is possible to define all these constraints manually.
+		solver.Add(prob_space[0,0,0,0] + prob_space[0,1,0,0] == prob_space[0,0,0,1] + prob_space[0,1,0,1])
+		solver.Add(prob_space[0,0,1,0] + prob_space[0,1,1,0] == prob_space[0,0,1,1] + prob_space[0,1,1,1])
+		solver.Add(prob_space[1,0,0,0] + prob_space[1,1,0,0] == prob_space[1,0,0,1] + prob_space[1,1,0,1])
+		solver.Add(prob_space[1,0,1,0] + prob_space[1,1,1,0] == prob_space[1,0,1,1] + prob_space[1,1,1,1])
+
+		# Conditions over \sum_a
+		solver.Add(prob_space[0,0,0,0] + prob_space[1,0,0,0] == prob_space[0,0,1,0] + prob_space[1,0,1,0])
+		solver.Add(prob_space[0,0,0,1] + prob_space[1,0,0,1] == prob_space[0,0,1,1] + prob_space[1,0,1,1])
+		solver.Add(prob_space[0,1,0,0] + prob_space[1,1,0,0] == prob_space[0,1,1,0] + prob_space[1,1,1,0])
+		solver.Add(prob_space[0,1,0,1] + prob_space[1,1,0,1] == prob_space[0,1,1,1] + prob_space[1,1,1,1])
+
+		# No-signaling value, which is to be maximised
+		val = solver.NumVar(0.0, 1.0, 'val')
+		solver.Maximize(val)
+
+
+		# Iterate through all possibilities and determine how much is added to the total win value
+		for a in range(2):
+			for b in range(2):
+				for s in range(2):
+					for t in range(2):
+						# Decide whether the combination of a,b,s,t wins the game
+						win = 1 if self.predMatrix[s,t] == a ^ b else 0
+
+						# If the combination wins, the probability that the questions occur gets multiplied with the value from the probability space.
+						val += self.probMatrix[s,t] * (win * prob_space[a,b,s,t])
+
+		# Solve the linear program
+		status = solver.Solve()
+		if status == pywraplp.Solver.OPTIMAL: 
+			return solver.Objective().Value()
+		else:
+			raise ValueError("There may not be an optimal solution for this problem.")
+		
+	def nsval_rep_upper_bound(self, reps) -> float:
+		return (1-(((1 - self.nsval_single())**2) / (6400)))**reps
+	
 	def to_nonlocal_game(self) -> np.ndarray:
 		
 		q_0, q_1 = self.probMatrix.shape
@@ -137,11 +198,4 @@ class Xorgame:
 						result[a,b,s,t] = pred_mat[s,t] == a ^ b
 
 		return result
-
-# Demonstration type beat
-prob = np.array([[0.25, 0.25],[0.25, 0.25]])
-pred = np.array([[0, 0],[0, 1]])
-chsh = Xorgame(pred, prob)
-
-print(chsh.cvalue(2))
-
+	
