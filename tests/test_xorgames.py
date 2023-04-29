@@ -26,6 +26,22 @@ def test_qvalue():
 
     np.testing.assert_almost_equal(game.qvalue(1), 0.85, 2)
 
+def test_nsvalue():
+    prob = np.array([[0.25,0.25],[0.25,0.25]])
+    pred = np.array([[0,0],[0,1]])
+
+    game = Xorgame(pred, prob)
+
+    np.testing.assert_equal(game.nsval_single(), 1)
+
+def test_nsvalue_rep():
+    prob = np.array([[0.25,0.25],[0.25,0.25]])
+    pred = np.array([[0,0],[0,1]])
+
+    game = Xorgame(pred, prob)
+
+    np.testing.assert_equal(game.nsval_rep_upper_bound(2), 1)
+
 def test_qvalue_repetition():
     prob = np.array([[0.25,0.25],[0.25,0.25]])
     pred = np.array([[0,0],[0,1]])
