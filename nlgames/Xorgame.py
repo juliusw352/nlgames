@@ -198,4 +198,3 @@ class Xorgame:
 						result[a,b,s,t] = pred_mat[s,t] == a ^ b
 
 		return result
-	
