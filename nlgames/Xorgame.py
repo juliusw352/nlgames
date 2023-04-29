@@ -138,10 +138,3 @@ class Xorgame:
 
 		return result
 
-# Demonstration type beat
-prob = np.array([[0.25, 0.25],[0.25, 0.25]])
-pred = np.array([[0, 0],[0, 1]])
-chsh = Xorgame(pred, prob)
-
-print(chsh.cvalue(2))
-
