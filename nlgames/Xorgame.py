@@ -11,12 +11,14 @@ class Xorgame:
 
 
 		#Catching errors
-		if (self.probMatrix.shape != self.predMatrix.shape):
+		if (probMatrix.shape != self.predMatrix.shape):
 			raise TypeError("Probability and predicate matrix must have the same dimensions.")
-		if (np.sum(self.probMatrix) != 1):
+		if (np.sum(probMatrix) != 1):
 			raise ValueError("The probabilities must sum up to one.")
 		if (np.any(probMatrix<0)):
 			raise ValueError("The probability matrix cannot contain negative values.")
+		if (probMatrix.shape[0] != probMatrix.shape[1]):
+			raise ValueError("The matrices must be square.")
 
 
 	def cvalue(self, reps: int) -> float:
