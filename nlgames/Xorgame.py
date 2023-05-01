@@ -127,7 +127,7 @@ class Xorgame:
 		value = self.qvalue(reps)
 		return value - (1-value)
 	
-	def nsval_single(self) -> float:
+	def nsvalue_single(self) -> float:
 
 		# Some of this function is hardcoded for 2x2 matrices.
 		if self.probMatrix.shape[0] > 2:
@@ -181,9 +181,12 @@ class Xorgame:
 			return solver.Objective().Value()
 		else:
 			raise ValueError("There may not be an optimal solution for this problem.")
+	def nsbias_single(self) -> float:
+		value = self.nsvalue_single(reps)
+		return value - (1-value)
 		
 	def nsval_rep_upper_bound(self, reps) -> float:
-		return (1-(((1 - self.nsval_single())**2) / (6400)))**reps
+		return (1-(((1 - self.nsvalue_single())**2) / (6400)))**reps
 	
 	def to_nonlocal_game(self) -> np.ndarray:
 		
