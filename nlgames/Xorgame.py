@@ -25,6 +25,9 @@ class Xorgame:
 		maxval = 0.0
 		augmented_prob = self.probMatrix
 
+		if (augmented_prob.shape[0] != 2):
+			raise ValueError("This unstable version of nlgames has shown that it may not work properly with matrices larger than 2x2.")
+
 		# Create larger probability matrix in case of repetition
 		for i in range(reps - 1):
 			augmented_prob = np.kron(augmented_prob, self.probMatrix)
