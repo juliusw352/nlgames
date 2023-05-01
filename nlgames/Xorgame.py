@@ -187,7 +187,7 @@ class Xorgame:
 		else:
 			raise ValueError("There may not be an optimal solution for this problem.")
 	def nsbias_single(self) -> float:
-		value = self.nsvalue_single(reps)
+		value = self.nsvalue_single()
 		return value - (1-value)
 		
 	def nsvalue_rep_upper_bound(self, reps) -> float:
