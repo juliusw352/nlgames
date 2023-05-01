@@ -32,7 +32,7 @@ def test_nsvalue():
 
     game = Xorgame(pred, prob)
 
-    np.testing.assert_equal(game.nsval_single(), 1)
+    np.testing.assert_equal(game.nsvalue_single(), 1)
 
 def test_nsvalue_rep():
     prob = np.array([[0.25,0.25],[0.25,0.25]])
@@ -40,7 +40,7 @@ def test_nsvalue_rep():
 
     game = Xorgame(pred, prob)
 
-    np.testing.assert_equal(game.nsval_rep_upper_bound(2), 1)
+    np.testing.assert_equal(game.nsvalue_rep_upper_bound(2), 1)
 
 def test_qvalue_repetition():
     prob = np.array([[0.25,0.25],[0.25,0.25]])

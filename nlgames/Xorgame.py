@@ -190,7 +190,7 @@ class Xorgame:
 		value = self.nsvalue_single(reps)
 		return value - (1-value)
 		
-	def nsval_rep_upper_bound(self, reps) -> float:
+	def nsvalue_rep_upper_bound(self, reps) -> float:
 		return (1-(((1 - self.nsvalue_single())**2) / (6400)))**reps
 	
 	def to_nonlocal_game(self) -> np.ndarray:
